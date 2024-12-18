@@ -5,8 +5,18 @@
 #include <time.h>
 #include <unistd.h>
 
+const size_t PAGE_SIZE = 4096;
 const unsigned char NOP = 0x90;
 const unsigned char RET = 0xc3;
+
+void check_system_page_size() {
+  size_t page_size = sysconf(_SC_PAGESIZE);
+  if (page_size != PAGE_SIZE) {
+    fprintf(stderr, "Unsupported pagesize: %zu, expected %zu\n", page_size,
+            PAGE_SIZE);
+    exit(1);
+  }
+}
 
 void write_code_to_page(void *page_addr) {
   unsigned char *write_ptr = (unsigned char *)page_addr;
@@ -18,18 +28,13 @@ void write_code_to_page(void *page_addr) {
 }
 
 int main() {
-  // Determine page size
-  size_t pagesize = sysconf(_SC_PAGESIZE);
-  if (pagesize != 4096) {
-    fprintf(stderr, "Unsupported pagesize: %zu, expected 4096\n", pagesize);
-    return 1;
-  }
+  check_system_page_size();
 
   // Allocate executable memory using mmap
   // mmap's allocations are page-aligned by default
   void *exec_mem =
-      mmap(NULL,     // Let the kernel choose the address
-           pagesize, // Allocate (at least) one page
+      mmap(NULL,      // Let the kernel choose the address
+           PAGE_SIZE, // Allocate (at least) one page
            PROT_READ | PROT_WRITE |
                PROT_EXEC,               // Read, write, and execute permissions
            MAP_PRIVATE | MAP_ANONYMOUS, // No file backing, anonymous memory
@@ -59,7 +64,7 @@ int main() {
   printf("Execution time: %luns\n", elapsed);
 
   // Free the memory
-  if (munmap(exec_mem, pagesize) != 0) {
+  if (munmap(exec_mem, PAGE_SIZE) != 0) {
     perror("munmap failed");
     return 1;
   }
