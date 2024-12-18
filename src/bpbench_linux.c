@@ -5,10 +5,17 @@
 #include <time.h>
 #include <unistd.h>
 
-unsigned char code[] = {
-    0x48, 0xc7, 0xc0, 0x05, 0x00, 0x00, 0x00, // mov rax, 5
-    0xc3                                      // ret
-};
+const unsigned char NOP = 0x90;
+const unsigned char RET = 0xc3;
+
+void write_code_to_page(void *page_addr) {
+  unsigned char *write_ptr = (unsigned char *)page_addr;
+
+  for (int i = 0; i < 4095; i++) {
+    write_ptr[i] = NOP;
+  }
+  write_ptr[4095] = RET;
+}
 
 int main() {
   // Determine page size
@@ -37,20 +44,18 @@ int main() {
 
   printf("Memory allocated at %p\n", exec_mem);
 
-  // Copy the machine code to the allocated memory
-  memcpy(exec_mem, code, sizeof(code));
+  write_code_to_page(exec_mem);
 
   // Execute the code and measure execution time
   printf("Executing page...\n");
   struct timespec start, end;
-  unsigned long (*func)() = exec_mem;
+  void (*func)() = exec_mem;
   clock_gettime(CLOCK_MONOTONIC, &start);
-  unsigned long return_value = func();
+  func();
   clock_gettime(CLOCK_MONOTONIC, &end);
   long seconds = end.tv_sec - start.tv_sec;
   long nanoseconds = end.tv_nsec - start.tv_nsec;
   long elapsed = seconds * 1e9 + nanoseconds;
-  printf("Code returned %lu\n", return_value);
   printf("Execution time: %luns\n", elapsed);
 
   // Free the memory
