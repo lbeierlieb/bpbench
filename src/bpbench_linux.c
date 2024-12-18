@@ -55,8 +55,11 @@ int main() {
   write_code_to_page(exec_mem);
   void *breakpoint_location = exec_mem + PAGE_SIZE - 1;
 
+  pid_t pid = getpid();
+
   printf("Memory page start address: %p\n", exec_mem);
   printf("Place the breakpoint here: %p\n", breakpoint_location);
+  printf("Process ID               : %d\n", pid);
 
   // Execute the code and measure execution time
   printf("Executing page...\n");
