@@ -18,18 +18,7 @@ void check_system_page_size() {
   }
 }
 
-void write_code_to_page(void *page_addr) {
-  unsigned char *write_ptr = (unsigned char *)page_addr;
-
-  for (int i = 0; i < 4095; i++) {
-    write_ptr[i] = NOP;
-  }
-  write_ptr[4095] = RET;
-}
-
-int main() {
-  check_system_page_size();
-
+void *alloc_exec_page() {
   // Allocate executable memory using mmap
   // mmap's allocations are page-aligned by default
   void *exec_mem =
@@ -44,9 +33,25 @@ int main() {
 
   if (exec_mem == MAP_FAILED) {
     perror("mmap failed");
-    return 1;
+    exit(1);
   }
 
+  return exec_mem;
+}
+
+void write_code_to_page(void *page_addr) {
+  unsigned char *write_ptr = (unsigned char *)page_addr;
+
+  for (int i = 0; i < 4095; i++) {
+    write_ptr[i] = NOP;
+  }
+  write_ptr[4095] = RET;
+}
+
+int main() {
+  check_system_page_size();
+
+  void *exec_mem = alloc_exec_page();
   printf("Memory allocated at %p\n", exec_mem);
 
   write_code_to_page(exec_mem);
