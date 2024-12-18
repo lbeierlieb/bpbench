@@ -182,6 +182,9 @@ int main() {
   printf("Executing on page...\n");
   bench_exec(breakpoint_location);
 
+  printf("Executing whole page...\n");
+  bench_exec(exec_mem);
+
   printf("Reading from page...\n");
   bench_read_qword(breakpoint_location);
 
