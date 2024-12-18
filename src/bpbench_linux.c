@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <time.h>
 #include <unistd.h>
 
 unsigned char code[] = {
@@ -39,11 +40,18 @@ int main() {
   // Copy the machine code to the allocated memory
   memcpy(exec_mem, code, sizeof(code));
 
-  // Execute the code
+  // Execute the code and measure execution time
   printf("Executing page...\n");
+  struct timespec start, end;
   unsigned long (*func)() = exec_mem;
+  clock_gettime(CLOCK_MONOTONIC, &start);
   unsigned long return_value = func();
+  clock_gettime(CLOCK_MONOTONIC, &end);
+  long seconds = end.tv_sec - start.tv_sec;
+  long nanoseconds = end.tv_nsec - start.tv_nsec;
+  long elapsed = seconds * 1e9 + nanoseconds;
   printf("Code returned %lu\n", return_value);
+  printf("Execution time: %luns\n", elapsed);
 
   // Free the memory
   if (munmap(exec_mem, pagesize) != 0) {
