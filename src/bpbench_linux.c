@@ -61,6 +61,31 @@ long time_execution(void *addr) {
   return elapsed;
 }
 
+void bench_exec(void *addr) {
+  unsigned int repetitions = 100000;
+  long times[repetitions];
+  for (int i = 0; i < repetitions; i++) {
+    times[i] = time_execution(addr);
+  }
+  long sum = times[0];
+  long min = times[0];
+  long max = times[0];
+  for (int i = 1; i < repetitions; i++) {
+    long time = times[i];
+    sum += time;
+    if (time < min) {
+      min = time;
+    } else if (time > max) {
+      max = time;
+    }
+  }
+  double avg = (double)sum / repetitions;
+  printf("repetitions : %u\n", repetitions);
+  printf("average time: %.2f\n", avg);
+  printf("min time    : %ld\n", min);
+  printf("max time    : %ld\n", max);
+}
+
 int main() {
   check_system_page_size();
 
@@ -74,9 +99,8 @@ int main() {
   printf("Place the breakpoint here: %p\n", breakpoint_location);
   printf("Process ID               : %d\n", pid);
 
-  printf("Executing page...\n");
-  long exec_time = time_execution(breakpoint_location);
-  printf("Execution time: %luns\n", exec_time);
+  printf("Executing on page...\n");
+  bench_exec(breakpoint_location);
 
   // Free the memory
   if (munmap(exec_mem, PAGE_SIZE) != 0) {
