@@ -9,13 +9,18 @@ unsigned char code[] = {
 };
 
 int main() {
-  // Step 1: Determine page size
+  // Determine page size
   size_t pagesize = sysconf(_SC_PAGESIZE);
+  if (pagesize != 4096) {
+    fprintf(stderr, "Unsupported pagesize: %zu, expected 4096\n", pagesize);
+    return 1;
+  }
 
-  // Step 2: Allocate executable memory using mmap
+  // Allocate executable memory using mmap
+  // mmap's allocations are page-aligned by default
   void *exec_mem =
       mmap(NULL,     // Let the kernel choose the address
-           pagesize, // Allocate at least one page
+           pagesize, // Allocate (at least) one page
            PROT_READ | PROT_WRITE |
                PROT_EXEC,               // Read, write, and execute permissions
            MAP_PRIVATE | MAP_ANONYMOUS, // No file backing, anonymous memory
@@ -30,15 +35,15 @@ int main() {
 
   printf("Memory allocated at %p\n", exec_mem);
 
-  // Step 3: Copy the machine code to the allocated memory
+  // Copy the machine code to the allocated memory
   memcpy(exec_mem, code, sizeof(code));
 
-  // Step 4: Execute the code
-  printf("Executing shellcode...\n");
+  // Execute the code
+  printf("Executing page...\n");
   void (*func)() = exec_mem;
   func();
 
-  // Step 5: Free the memory
+  // Free the memory
   if (munmap(exec_mem, pagesize) != 0) {
     perror("munmap failed");
     return 1;
