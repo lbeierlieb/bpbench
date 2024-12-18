@@ -52,9 +52,11 @@ int main() {
   check_system_page_size();
 
   void *exec_mem = alloc_exec_page();
-  printf("Memory allocated at %p\n", exec_mem);
-
   write_code_to_page(exec_mem);
+  void *breakpoint_location = exec_mem + PAGE_SIZE - 1;
+
+  printf("Memory page start address: %p\n", exec_mem);
+  printf("Place the breakpoint here: %p\n", breakpoint_location);
 
   // Execute the code and measure execution time
   printf("Executing page...\n");
