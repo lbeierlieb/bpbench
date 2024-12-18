@@ -48,6 +48,19 @@ void write_code_to_page(void *page_addr) {
   write_ptr[4095] = RET;
 }
 
+long time_execution(void *addr) {
+  struct timespec start, end;
+  void (*func)() = addr;
+  clock_gettime(CLOCK_MONOTONIC, &start);
+  func();
+  clock_gettime(CLOCK_MONOTONIC, &end);
+  long seconds = end.tv_sec - start.tv_sec;
+  long nanoseconds = end.tv_nsec - start.tv_nsec;
+  long elapsed = seconds * 1e9 + nanoseconds;
+
+  return elapsed;
+}
+
 int main() {
   check_system_page_size();
 
@@ -61,17 +74,9 @@ int main() {
   printf("Place the breakpoint here: %p\n", breakpoint_location);
   printf("Process ID               : %d\n", pid);
 
-  // Execute the code and measure execution time
   printf("Executing page...\n");
-  struct timespec start, end;
-  void (*func)() = exec_mem;
-  clock_gettime(CLOCK_MONOTONIC, &start);
-  func();
-  clock_gettime(CLOCK_MONOTONIC, &end);
-  long seconds = end.tv_sec - start.tv_sec;
-  long nanoseconds = end.tv_nsec - start.tv_nsec;
-  long elapsed = seconds * 1e9 + nanoseconds;
-  printf("Execution time: %luns\n", elapsed);
+  long exec_time = time_execution(breakpoint_location);
+  printf("Execution time: %luns\n", exec_time);
 
   // Free the memory
   if (munmap(exec_mem, PAGE_SIZE) != 0) {
