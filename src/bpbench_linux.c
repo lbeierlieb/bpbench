@@ -5,7 +5,8 @@
 #include <unistd.h>
 
 unsigned char code[] = {
-    0xc3 // `ret` instruction (just returns immediately)
+    0x48, 0xc7, 0xc0, 0x05, 0x00, 0x00, 0x00, // mov rax, 5
+    0xc3                                      // ret
 };
 
 int main() {
@@ -40,8 +41,9 @@ int main() {
 
   // Execute the code
   printf("Executing page...\n");
-  void (*func)() = exec_mem;
-  func();
+  unsigned long (*func)() = exec_mem;
+  unsigned long return_value = func();
+  printf("Code returned %lu\n", return_value);
 
   // Free the memory
   if (munmap(exec_mem, pagesize) != 0) {
