@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <windows.h>
 
+const LPVOID PAGE_ADDR = (void *)0x2091a4f0000; // use one that has been used
+                                                // randomly by Windows earlier
 const size_t PAGE_SIZE = 4096;
 const unsigned char NOP = 0x90;
 const unsigned char RET = 0xC3;
@@ -19,7 +21,7 @@ void check_system_page_size() {
 
 void *alloc_exec_page() {
   void *exec_mem = VirtualAlloc(
-      NULL,                     // Let the system choose the address
+      PAGE_ADDR,                // Use fixed address
       PAGE_SIZE,                // Allocate one page
       MEM_COMMIT | MEM_RESERVE, // Commit and reserve memory
       PAGE_EXECUTE_READWRITE    // Read, write, and execute permissions
