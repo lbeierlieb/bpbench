@@ -27,6 +27,7 @@
               doxygen
               gtest
               lcov
+              pkgsCross.mingwW64.buildPackages.gcc
               vcpkg
               vcpkg-tool
             ] ++ (if system == "aarch64-darwin" then [ ] else [ gdb ]);
