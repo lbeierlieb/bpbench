@@ -5,6 +5,7 @@
 
 const LPVOID PAGE_ADDR = (void *)0x2091a4f0000; // use one that has been used
                                                 // randomly by Windows earlier
+const char *TRIGGER_NAME = "TRIGGER.EXE";
 const size_t PAGE_SIZE = 4096;
 const unsigned char NOP = 0x90;
 const unsigned char RET = 0xC3;
@@ -56,6 +57,38 @@ LONGLONG time_execution(void *addr) {
   return (end.QuadPart - start.QuadPart) * 1e9 / frequency.QuadPart;
 }
 
+void trigger() {
+  // Initialize STARTUPINFO and PROCESS_INFORMATION
+  STARTUPINFO si = {0};
+  PROCESS_INFORMATION pi = {0};
+  si.cb = sizeof(si);
+
+  // Attempt to create the process
+  if (!CreateProcess(
+          NULL, // Application name (NULL means use the command line)
+          (LPSTR)TRIGGER_NAME, // Command line (including program name)
+          NULL,                // Process security attributes
+          NULL,                // Thread security attributes
+          FALSE,               // Inherit handles
+          0,                   // Creation flags
+          NULL,                // Use parent's environment
+          NULL,                // Use parent's current directory
+          &si,                 // Pointer to STARTUPINFO
+          &pi                  // Pointer to PROCESS_INFORMATION
+          )) {
+    // If CreateProcess fails, print an error message
+    fprintf(stderr, "Failed to start trigger (%lu)\n", GetLastError());
+    return;
+  }
+
+  // Wait for the process to terminate
+  WaitForSingleObject(pi.hProcess, INFINITE);
+
+  // Close process and thread handles
+  CloseHandle(pi.hProcess);
+  CloseHandle(pi.hThread);
+}
+
 void bench_exec(void *addr) {
   unsigned int repetitions = 100000;
   LONGLONG times[repetitions];
@@ -90,6 +123,8 @@ int main() {
   void *breakpoint_location = (void *)((uintptr_t)exec_mem + PAGE_SIZE - 1);
 
   DWORD pid = GetCurrentProcessId();
+
+  trigger();
 
   printf("Memory page start address: %p\n", exec_mem);
   printf("Place the breakpoint here: %p\n", breakpoint_location);
