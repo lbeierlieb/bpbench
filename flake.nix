@@ -30,6 +30,7 @@
               pkgsCross.mingwW64.buildPackages.gcc
               vcpkg
               vcpkg-tool
+              cdrkit
             ] ++ (if system == "aarch64-darwin" then [ ] else [ gdb ]);
           };
       });
