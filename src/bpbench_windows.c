@@ -87,7 +87,6 @@ int main() {
 
   void *exec_mem = alloc_exec_page();
   write_code_to_page(exec_mem);
-  void *breakpoint_location = (void *)((uintptr_t)exec_mem + PAGE_SIZE - 1);
 
   DWORD pid = GetCurrentProcessId();
 
